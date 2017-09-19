@@ -6,7 +6,9 @@
             "type": "string",
             "allowedValues": [
                 "Canada East",
-                "Canada Central"
+                "Canada Central",
+                "East US",
+                "East US 2"
             ]
         },
         "virtualMachineName": {
