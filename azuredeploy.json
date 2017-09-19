@@ -3,46 +3,65 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "type": "string"
+            "type": "string",
+            "allowedValues": [
+                "Canada East",
+                "Canada Central"
+            ]
         },
         "virtualMachineName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "sdbx-"
         },
         "virtualMachineSize": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "Standard_A5"
         },
         "adminUsername": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "hdpadmin"
         },
         "virtualNetworkName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "sdbx-vnet"
         },
         "networkInterfaceName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "nic-"
         },
         "networkSecurityGroupName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "subnet-nsg"
         },
         "adminPassword": {
             "type": "securestring"
         },
         "addressPrefix": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "10.0.22.0/24"
         },
         "subnetName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "default"
         },
         "subnetPrefix": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "10.0.22.0/24"
         },
         "publicIpAddressName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "pip-"
         },
         "publicIpAddressType": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "Dynamic"
         },
         "publicIpAddressSku": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "Basic"
+        },
+        "nbSandbox": {
+            "type": "int"
         }
     },
     "variables": {
@@ -51,16 +70,20 @@
     },
     "resources": [
         {
-            "name": "[parameters('virtualMachineName')]",
+            "name": "[concat(parameters('virtualMachineName'), copyIndex())]",
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2016-04-30-preview",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('networkInterfaceName'))]"
+                "[concat('Microsoft.Network/networkInterfaces/', concat(parameters('networkInterfaceName'), copyIndex()))]"
             ],
+            "copy": {
+                "count": "[parameters('nbSandbox')]",
+                "name": "vm-iterator"
+            },
             "properties": {
                 "osProfile": {
-                    "computerName": "[parameters('virtualMachineName')]",
+                    "computerName": "[concat(parameters('virtualMachineName'), copyIndex())]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -75,7 +98,7 @@
                         "version": "latest"
                     },
                     "osDisk": {
-                        "createOption": "fromImage",
+                        "createOption": "FromImage",
                         "managedDisk": {
                             "storageAccountType": "Standard_LRS"
                         }
@@ -85,7 +108,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('networkInterfaceName'), copyIndex()))]"
                         }
                     ]
                 }
@@ -118,15 +141,19 @@
             }
         },
         {
-            "name": "[parameters('networkInterfaceName')]",
+            "name": "[concat(parameters('networkInterfaceName'), copyIndex())]",
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2016-09-01",
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
-                "[concat('Microsoft.Network/publicIpAddresses/', parameters('publicIpAddressName'))]",
+                "[concat('Microsoft.Network/publicIpAddresses/', concat(parameters('publicIpAddressName'), copyIndex()))]",
                 "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
             ],
+            "copy": {
+                "count": "[parameters('nbSandbox')]",
+                "name": "NIC-iterator"
+            },
             "properties": {
                 "ipConfigurations": [
                     {
@@ -137,7 +164,7 @@
                             },
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIpAddress": {
-                                "id": "[resourceId('sblab','Microsoft.Network/publicIpAddresses', parameters('publicIpAddressName'))]"
+                                "id": "[resourceId('sblab','Microsoft.Network/publicIpAddresses', concat(parameters('publicIpAddressName'), copyIndex()))]"
                             }
                         }
                     }
@@ -148,10 +175,14 @@
             }
         },
         {
-            "name": "[parameters('publicIpAddressName')]",
+            "name": "[concat(parameters('publicIpAddressName'), copyIndex())]",
             "type": "Microsoft.Network/publicIpAddresses",
             "apiVersion": "2017-08-01",
             "location": "[parameters('location')]",
+            "copy": {
+                "count": "[parameters('nbSandbox')]",
+                "name": "PIP-iterator"
+            },
             "properties": {
                 "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
             },
@@ -177,6 +208,45 @@
                             "sourcePortRange": "*",
                             "destinationAddressPrefix": "*",
                             "destinationPortRange": "22"
+                        }
+                    },                    
+                    {
+                        "name": "allow-8888",
+                        "properties": {
+                            "priority": 1001,
+                            "protocol": "TCP",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "8888"
+                        }
+                    },                    
+                    {
+                        "name": "allow-8080",
+                        "properties": {
+                            "priority": 1002,
+                            "protocol": "TCP",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "8080"
+                        }
+                    },                    
+                    {
+                        "name": "allow-9995",
+                        "properties": {
+                            "priority": 1003,
+                            "protocol": "TCP",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": "9995"
                         }
                     }
                 ]
