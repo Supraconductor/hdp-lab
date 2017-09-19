@@ -118,11 +118,6 @@
                         }
                     ]
                 }
-            },
-            "plan": {
-                "name": "sandbox25",
-                "publisher": "hortonworks",
-                "product": "hortonworks-sandbox"
             }
         },
         {
