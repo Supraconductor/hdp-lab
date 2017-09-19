@@ -127,6 +127,9 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2016-12-01",
             "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"                
+            ],
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -137,7 +140,10 @@
                     {
                         "name": "[parameters('subnetName')]",
                         "properties": {
-                            "addressPrefix": "[parameters('subnetPrefix')]"
+                            "addressPrefix": "[parameters('subnetPrefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('sblab', 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"                                
+                            }
                         }
                     }
                 ]
@@ -150,8 +156,7 @@
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
-                "[concat('Microsoft.Network/publicIpAddresses/', concat(parameters('publicIpAddressName'), copyIndex()))]",
-                "[concat('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]"
+                "[concat('Microsoft.Network/publicIpAddresses/', concat(parameters('publicIpAddressName'), copyIndex()))]"
             ],
             "copy": {
                 "count": "[parameters('nbSandbox')]",
@@ -171,10 +176,7 @@
                             }
                         }
                     }
-                ],
-                "networkSecurityGroup": {
-                    "id": "[resourceId('sblab', 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
-                }
+                ]
             }
         },
         {
