@@ -68,7 +68,7 @@
         }
     },
     "variables": {
-        "vnetId": "[resourceId('sblab','Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
     },
     "resources": [
@@ -142,7 +142,7 @@
                         "properties": {
                             "addressPrefix": "[parameters('subnetPrefix')]",
                             "networkSecurityGroup": {
-                                "id": "[resourceId('sblab', 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"                                
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"                                
                             }
                         }
                     }
@@ -172,7 +172,7 @@
                             },
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIpAddress": {
-                                "id": "[resourceId('sblab','Microsoft.Network/publicIpAddresses', concat(parameters('publicIpAddressName'), copyIndex()))]"
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', concat(parameters('publicIpAddressName'), copyIndex()))]"
                             }
                         }
                     }
