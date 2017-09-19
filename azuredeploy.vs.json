@@ -60,7 +60,7 @@
             "type": "string",
             "defaultValue": "Basic"
         },
-        "nbSandbox": {
+        "nbVM": {
             "type": "int"
         },
         "uniqueDNSPrefix": {
@@ -81,7 +81,7 @@
                 "[concat('Microsoft.Network/networkInterfaces/', concat(parameters('networkInterfaceName'), copyIndex()))]"
             ],
             "copy": {
-                "count": "[parameters('nbSandbox')]",
+                "count": "[parameters('nbVM')]",
                 "name": "vm-iterator"
             },
             "properties": {
@@ -162,7 +162,7 @@
                 "[concat('Microsoft.Network/publicIpAddresses/', concat(parameters('publicIpAddressName'), copyIndex()))]"
             ],
             "copy": {
-                "count": "[parameters('nbSandbox')]",
+                "count": "[parameters('nbVM')]",
                 "name": "NIC-iterator"
             },
             "properties": {
@@ -188,7 +188,7 @@
             "apiVersion": "2017-08-01",
             "location": "[parameters('location')]",
             "copy": {
-                "count": "[parameters('nbSandbox')]",
+                "count": "[parameters('nbVM')]",
                 "name": "PIP-iterator"
             },
             "properties": {
